@@ -11,3 +11,11 @@ const data={contents:[{videoRenderer:{videoId:'abc',title:{runs:[{text:'Naval Ra
 assert.equal(parseYouTube('<script>var ytInitialData = '+JSON.stringify(data)+';</script>','Naval Ravikant').length,1);
 assert.equal(publicationDate('<meta property="article:published_time" content="2025-01-02">'),'2025-01-02');
 console.log('8 search regression checks passed');
+const {read}=await import('../dist/server/index.js');
+const originalFetch=globalThis.fetch;let calls=0;
+globalThis.fetch=async ()=>++calls===1?new Response(null,{status:302,headers:{location:'https://cn.bing.com/search?q=test'}}):new Response('<rss/>');
+assert.equal(await read('https://www.bing.com/search?q=test'),'<rss/>');assert.equal(calls,2);
+globalThis.fetch=async ()=>new Response(null,{status:302,headers:{location:'https://untrusted.example/'}});
+await assert.rejects(()=>read('https://www.bing.com/search?q=test'),/redirect_not_allowed/);
+globalThis.fetch=originalFetch;
+console.log('Trusted redirect and foreign redirect checks passed');
