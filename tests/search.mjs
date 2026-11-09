@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {classify,relevant,canonical,parseRSS,parseYouTube,publicationDate} from '../dist/server/index.js';
+assert.equal(classify('https://writer.example/blog/thoughts','随笔'),'article');
+assert.equal(classify('https://www.reuters.com/articles/x','essay'),null);
+assert.equal(classify('https://youtube.com/watch?v=123','新闻快讯'),null);
+assert.equal(relevant('Jensen Huang interview','黄仁勋'),true);
+assert.equal(relevant('工商银行短信','Naval Ravikant'),false);
+assert.equal(canonical('https://youtube.com/watch?v=abc&utm_source=x&t=2'),'https://www.youtube.com/watch?v=abc');
+assert.equal(parseRSS('<rss><item><title>无关内容</title><link>https://writer.example/blog/x</link></item></rss>','余华').length,0);
+const data={contents:[{videoRenderer:{videoId:'abc',title:{runs:[{text:'Naval Ravikant Interview'}]}}}]};
+assert.equal(parseYouTube('<script>var ytInitialData = '+JSON.stringify(data)+';</script>','Naval Ravikant').length,1);
+assert.equal(publicationDate('<meta property="article:published_time" content="2025-01-02">'),'2025-01-02');
+console.log('8 search regression checks passed');
